@@ -1,0 +1,68 @@
+--[[
+This script highlights all players (except you) in the game with a red color and a white outline.
+It also displays their usernames above their heads.
+Save this script as a LocalScript in StarterPlayerScripts.
+]]
+ 
+-- Function to highlight a player (excluding the local player)
+local function highlightPlayer(player)
+    if player.Character and player.Character:FindFirstChild("Head") then
+        -- Exclude the local player from being highlighted
+        if player == game.Players.LocalPlayer then
+            return
+        end
+ 
+        -- Check if a highlight already exists
+        local character = player.Character
+        if character:FindFirstChild("Highlight") then
+            return
+        end
+ 
+        -- Create a Highlight instance
+        local highlight = Instance.new("Highlight")
+        highlight.Adornee = character
+        highlight.FillColor = Color3.fromRGB(255, 0, 0) -- Red color
+        highlight.OutlineColor = Color3.fromRGB(255, 255, 255) -- White outline
+        highlight.OutlineTransparency = 0 -- Fully visible outline
+        highlight.Parent = character
+ 
+        -- Add a BillboardGui to display the player's username above their head
+        if not character:FindFirstChild("PlayerNameDisplay") then
+            local billboard = Instance.new("BillboardGui")
+            billboard.Name = "PlayerNameDisplay"
+            billboard.Adornee = character.Head
+            billboard.Size = UDim2.new(4, 0, 1, 0)
+            billboard.StudsOffset = Vector3.new(0, 3, 0)
+            billboard.AlwaysOnTop = true
+ 
+            local textLabel = Instance.new("TextLabel")
+            textLabel.Size = UDim2.new(1, 0, 1, 0)
+            textLabel.BackgroundTransparency = 1
+            textLabel.Text = player.Name
+            textLabel.TextColor3 = Color3.fromRGB(255, 255, 255) -- White text
+            textLabel.TextScaled = true
+            textLabel.Font = Enum.Font.SourceSansBold
+            textLabel.Parent = billboard
+ 
+            billboard.Parent = character
+        end
+    end
+end
+ 
+-- Function to scan for players in the server
+local function scanForPlayers()
+    local players = game:GetService("Players")
+    for _, player in ipairs(players:GetPlayers()) do
+        -- Only highlight players who have a character
+        if player.Character then
+            highlightPlayer(player)
+        end
+    end
+end
+ 
+-- Continuously scan for players every 10 seconds
+while true do
+    scanForPlayers()
+    wait(10) -- Adjust the interval if needed
+end
+ 
