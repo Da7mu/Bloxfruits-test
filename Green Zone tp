@@ -1,16 +1,87 @@
-local player = game.Players.LocalPlayer
-local greenZonePart = workspace:WaitForChild("Green Zone")  -- Make sure you have a part named "Green Zone" in the workspace
+-- LocalScript for creating a Blox Fruits menu GUI
 
--- Function to teleport the player to the Green Zone part
-local function teleportToGreenZone()
-    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-    
-    if humanoidRootPart and greenZonePart then
-        humanoidRootPart.CFrame = greenZonePart.CFrame  -- Teleport player to the Green Zone part's CFrame
-    else
-        warn("Player's character or Green Zone part not found.")
-    end
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- Create the ScreenGui and main frame
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player.PlayerGui
+
+-- Create the menu frame
+local menuFrame = Instance.new("Frame")
+menuFrame.Size = UDim2.new(0, 300, 0, 400)  -- Menu size (300x400)
+menuFrame.Position = UDim2.new(0.5, -150, 0.5, -200)  -- Centered on screen
+menuFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Background color (black)
+menuFrame.BackgroundTransparency = 0.5  -- Semi-transparent
+menuFrame.Parent = screenGui
+
+-- Add a title to the menu
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 50)
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Text = "Blox Fruits Menu"
+titleLabel.TextSize = 24
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextAlign = Enum.TextAlign.Center
+titleLabel.Parent = menuFrame
+
+-- Add a button for toggling a special ability
+local abilityButton = Instance.new("TextButton")
+abilityButton.Size = UDim2.new(1, 0, 0, 50)
+abilityButton.Position = UDim2.new(0, 0, 0.2, 0)
+abilityButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)  -- Green button
+abilityButton.Text = "Toggle Special Ability"
+abilityButton.TextSize = 20
+abilityButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+abilityButton.Parent = menuFrame
+
+-- Add a button for showing stats
+local statsButton = Instance.new("TextButton")
+statsButton.Size = UDim2.new(1, 0, 0, 50)
+statsButton.Position = UDim2.new(0, 0, 0.4, 0)
+statsButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)  -- Blue button
+statsButton.Text = "Show Stats"
+statsButton.TextSize = 20
+statsButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+statsButton.Parent = menuFrame
+
+-- Add a button to close the menu
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(1, 0, 0, 50)
+closeButton.Position = UDim2.new(0, 0, 0.6, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red button
+closeButton.Text = "Close Menu"
+closeButton.TextSize = 20
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Parent = menuFrame
+
+-- Function to toggle the special ability
+local function toggleAbility()
+    -- Example action for toggling a special ability
+    -- You can replace this with any logic related to activating special abilities in Blox Fruits
+    print("Special ability activated!")
+    -- You can add more code here to activate a special ability (e.g., Light Fruit, Flame, etc.)
 end
 
--- Call the function to teleport the player
-teleportToGreenZone()
+-- Function to show the player's stats
+local function showStats()
+    -- Example logic to show stats in the chat
+    -- You can replace this with logic to show detailed player stats in a GUI
+    print("Player Stats:")
+    print("Level: " .. player.Data.Level)  -- Replace with actual stat retrieval logic
+    print("Health: " .. player.Humanoid.Health)
+end
+
+-- Function to close the menu
+local function closeMenu()
+    menuFrame.Visible = false  -- Hide the menu
+end
+
+-- Button actions
+abilityButton.MouseButton1Click:Connect(toggleAbility)
+statsButton.MouseButton1Click:Connect(showStats)
+closeButton.MouseButton1Click:Connect(closeMenu)
+
+-- Make the menu visible by default
+menuFrame.Visible = true
