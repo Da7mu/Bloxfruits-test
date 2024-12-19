@@ -1,0 +1,16 @@
+local player = game.Players.LocalPlayer
+local greenZonePart = workspace:WaitForChild("Green Zone")  -- Make sure you have a part named "Green Zone" in the workspace
+
+-- Function to teleport the player to the Green Zone part
+local function teleportToGreenZone()
+    local humanoidRootPart = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    
+    if humanoidRootPart and greenZonePart then
+        humanoidRootPart.CFrame = greenZonePart.CFrame  -- Teleport player to the Green Zone part's CFrame
+    else
+        warn("Player's character or Green Zone part not found.")
+    end
+end
+
+-- Call the function to teleport the player
+teleportToGreenZone()
