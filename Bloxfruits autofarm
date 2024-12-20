@@ -1,4 +1,4 @@
--- Blox Fruits Auto Farm Level Script (Exploiter Style)
+-- Blox Fruits Auto Farm Script (Fly and Quest Complete)
 
 -- Setup references
 local player = game.Players.LocalPlayer
@@ -8,16 +8,32 @@ local humanoid = character:WaitForChild("Humanoid")
 local mouse = player:GetMouse()
 
 -- Settings
-local flyingHeight = 100 -- Height to fly above NPCs
-local attackRange = 50  -- Maximum range for attacks
-local questTargetName = "Bandit"  -- Target NPC (change as needed)
-local attackDelay = 0.5  -- Delay between attacks
+local flyingHeight = 100  -- Height to fly above NPCs
+local attackRange = 20    -- Attack range to hit NPCs
+local attackDelay = 0.5   -- Delay between attacks (adjust for combat speed)
+local questTargetName = "Bandit"  -- NPC name to target
+local questGiverName = "QuestGiver"  -- Quest NPC name (change as needed)
 local isAutoFarming = false
+
+-- Find and interact with the quest giver
+local function takeQuest()
+    local questGiver = game.Workspace:FindFirstChild(questGiverName)
+    if questGiver then
+        local questNpc = questGiver:FindFirstChild("HumanoidRootPart")
+        if questNpc then
+            -- Move towards the quest giver (you can simulate clicking the NPC to take the quest)
+            humanoidRootPart.CFrame = CFrame.new(questNpc.Position + Vector3.new(0, 5, 0)) -- Move close to quest giver
+            wait(0.5) -- Wait for interaction
+            -- Simulate quest accepting (you would typically press a button to accept the quest in game)
+            print("Quest accepted!")
+        end
+    end
+end
 
 -- Function to enable flying above NPCs
 local function enableFlying()
-    -- Set the flying height and make the character fly upwards
     humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, flyingHeight, 0)
+    print("Flying enabled.")
 end
 
 -- Function to enlarge the hitbox (enables auto-hitting NPCs while flying)
@@ -61,6 +77,7 @@ end
 -- Function to start the autofarm (toggle state)
 local function startAutoFarm()
     isAutoFarming = true
+    takeQuest()  -- Take quest before starting
     enableFlying()  -- Fly above NPCs
     enlargeHitbox()  -- Enlarge hitbox
     print("Auto Farming Started.")
