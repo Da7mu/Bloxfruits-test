@@ -1,4 +1,4 @@
--- Blox Fruits Auto Farm Quest Level Script
+-- Blox Fruits Auto Farm Level Script (Exploiter Style)
 
 -- Setup references
 local player = game.Players.LocalPlayer
@@ -7,58 +7,38 @@ local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 local mouse = player:GetMouse()
 
--- GUI Setup (For enabling/disabling the Auto Farm)
-local playerGui = player:WaitForChild("PlayerGui")
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = playerGui
-
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 100)
-frame.Position = UDim2.new(0.5, -150, 0.5, -50)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BackgroundTransparency = 0.5
-frame.Parent = screenGui
-
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 260, 0, 40)
-button.Position = UDim2.new(0, 20, 0, 20)
-button.Text = "Toggle Auto Farm"
-button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-button.Parent = frame
-
--- Auto Farming Logic
+-- Settings
+local flyingHeight = 100 -- Height to fly above NPCs
+local attackRange = 50  -- Maximum range for attacks
+local questTargetName = "Bandit"  -- Target NPC (change as needed)
+local attackDelay = 0.5  -- Delay between attacks
 local isAutoFarming = false
-local questTargetName = "Bandit"  -- Example NPC (change as needed)
-local targetHitboxSize = Vector3.new(10, 10, 10)  -- Enlarge hitbox
-local flyingHeight = 20  -- Height to fly above NPCs
 
--- Function to enlarge the hitbox (used to attack NPCs while flying)
+-- Function to enable flying above NPCs
+local function enableFlying()
+    -- Set the flying height and make the character fly upwards
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, flyingHeight, 0)
+end
+
+-- Function to enlarge the hitbox (enables auto-hitting NPCs while flying)
 local function enlargeHitbox()
-    humanoid.HipWidth = 10
-    humanoid.HipHeight = 10
-    humanoidRootPart.Size = targetHitboxSize
+    humanoid.HipWidth = 10  -- Increase hip width for larger hitbox
+    humanoid.HipHeight = 10  -- Increase hip height for larger hitbox
+    humanoidRootPart.Size = Vector3.new(10, 10, 10)  -- Increase humanoid root size
 end
 
--- Function to fly above NPCs
-local function flyAboveNPCs()
-    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.new(0, flyingHeight, 0)
-end
-
--- Function to handle Auto Farming
-local function autoFarm()
+-- Function to automatically attack NPCs in range
+local function autoAttack()
     while isAutoFarming do
-        -- Fly above NPCs
-        flyAboveNPCs()
-
-        -- Find the closest NPC to attack
         local closestEnemy = nil
         local minDist = math.huge
 
+        -- Find the closest NPC in range
         for _, enemy in pairs(game.Workspace:GetChildren()) do
             if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                 if enemy.Name == questTargetName then
                     local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
-                    if dist < minDist then
+                    if dist < minDist and dist <= attackRange then
                         minDist = dist
                         closestEnemy = enemy
                     end
@@ -66,28 +46,43 @@ local function autoFarm()
             end
         end
 
-        -- If a valid NPC is found, simulate an attack (can replace with actual attack logic)
+        -- Attack the closest NPC
         if closestEnemy then
             humanoidRootPart.CFrame = CFrame.new(closestEnemy.HumanoidRootPart.Position)
+            -- Simulate attack (can be replaced with actual attack logic)
             print("Attacking " .. closestEnemy.Name)
-            -- You can add combat logic here to actually attack, e.g., by using skills or pressing M1
+            -- Place your attack function or logic here (e.g., using abilities, pressing M1, etc.)
         end
 
-        wait(1)  -- Adjust wait time as needed
+        wait(attackDelay)  -- Adjust attack delay as needed
     end
 end
 
--- Toggle Auto Farming function
-button.MouseButton1Click:Connect(function()
-    isAutoFarming = not isAutoFarming
-    if isAutoFarming then
-        print("Auto Farm Enabled")
-        enlargeHitbox()  -- Enlarge the hitbox before starting
-        autoFarm()  -- Start auto farming
-    else
-        print("Auto Farm Disabled")
-        humanoid.HipWidth = 2  -- Reset the hitbox to normal
-        humanoid.HipHeight = 2
-        humanoidRootPart.Size = Vector3.new(2, 2, 2)  -- Reset the hitbox size to default
+-- Function to start the autofarm (toggle state)
+local function startAutoFarm()
+    isAutoFarming = true
+    enableFlying()  -- Fly above NPCs
+    enlargeHitbox()  -- Enlarge hitbox
+    print("Auto Farming Started.")
+    autoAttack()  -- Start attacking NPCs automatically
+end
+
+-- Function to stop the autofarm
+local function stopAutoFarm()
+    isAutoFarming = false
+    humanoid.HipWidth = 2  -- Reset hitbox to default
+    humanoid.HipHeight = 2
+    humanoidRootPart.Size = Vector3.new(2, 2, 2)  -- Reset root size to normal
+    print("Auto Farming Stopped.")
+end
+
+-- Hotkey to toggle auto-farming (example: press "F" to start/stop auto-farming)
+mouse.KeyDown:Connect(function(key)
+    if key:lower() == "f" then  -- Press "F" to toggle
+        if isAutoFarming then
+            stopAutoFarm()  -- Stop farming if it's already enabled
+        else
+            startAutoFarm()  -- Start farming if it's not enabled
+        end
     end
 end)
