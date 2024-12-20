@@ -80,8 +80,10 @@ end)
 local function createHighlight(target)
     local highlight = Instance.new("Highlight")
     highlight.Adornee = target
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for fill
     highlight.FillTransparency = 0.5  -- Semi-transparent
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)  -- Red color for outline
+    highlight.OutlineTransparency = 0  -- Fully visible outline
     highlight.Parent = ReplicatedStorage
     return highlight
 end
