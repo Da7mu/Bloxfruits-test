@@ -118,12 +118,20 @@ local function lockOnEnemy()
     local nearestEnemy = findNearestEnemy()
 
     if nearestEnemy and nearestEnemy.Character then
-        local enemyHead = nearestEnemy.Character.Head
-        camera.CFrame = CFrame.new(camera.CFrame.Position, enemyHead.Position)  -- Lock camera to enemy's head
+        local enemyCharacter = nearestEnemy.Character
+        local enemyHead = enemyCharacter:FindFirstChild("Head")
+        local enemyTorso = enemyCharacter:FindFirstChild("HumanoidRootPart") -- Use the humanoid root part if Head doesn't work well
+
+        -- Lock the camera to the enemy's head or torso
+        if enemyHead then
+            camera.CFrame = CFrame.new(camera.CFrame.Position, enemyHead.Position)
+        elseif enemyTorso then
+            camera.CFrame = CFrame.new(camera.CFrame.Position, enemyTorso.Position)
+        end
 
         -- Highlight enemy if not already highlighted
-        if not enemyHead:FindFirstChild("Highlight") then
-            createHighlight(enemyHead)
+        if not enemyCharacter:FindFirstChild("Highlight") then
+            createHighlight(enemyCharacter)  -- Highlight the entire character (Head and Body)
         end
     end
 end
