@@ -3,61 +3,60 @@ local character = player.Character or player.CharacterAdded:Wait()
 local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
 local bladeBall = workspace:FindFirstChild("BladeBall") -- Replace "BladeBall" with the actual name of the ball
-local circleRadius = 20 -- Radius of the detection circle
+local sphereRadius = 20 -- Radius of the detection sphere
 
--- Create a visual representation of the circle
-local function createCircle()
-    local circlePart = Instance.new("Part")
-    circlePart.Name = "DetectionCircle"
-    circlePart.Size = Vector3.new(circleRadius * 2, 0.2, circleRadius * 2)
-    circlePart.Shape = Enum.PartType.Cylinder
-    circlePart.Material = Enum.Material.ForceField
-    circlePart.Transparency = 0.5
-    circlePart.CanCollide = false
-    circlePart.Anchored = true
-    circlePart.Color = Color3.new(0, 1, 0) -- Green circle
-    circlePart.Parent = workspace
-    return circlePart
+-- Create a visual representation of the sphere
+local function createSphere()
+    local spherePart = Instance.new("Part")
+    spherePart.Name = "DetectionSphere"
+    spherePart.Size = Vector3.new(sphereRadius * 2, sphereRadius * 2, sphereRadius * 2)
+    spherePart.Shape = Enum.PartType.Ball
+    spherePart.Material = Enum.Material.ForceField
+    spherePart.Transparency = 0.5
+    spherePart.CanCollide = false
+    spherePart.Anchored = true
+    spherePart.Color = Color3.new(0, 0, 1) -- Blue sphere
+    spherePart.Parent = workspace
+    return spherePart
 end
 
--- Updates the circle position to follow the player
-local function updateCircle(circle)
+-- Updates the sphere position to follow the player
+local function updateSphere(sphere)
     if character and character:FindFirstChild("HumanoidRootPart") then
-        circle.Position = character.HumanoidRootPart.Position + Vector3.new(0, -1, 0)
-        circle.Orientation = Vector3.new(0, 0, 0) -- Ensure it stays flat
+        sphere.Position = character.HumanoidRootPart.Position
     end
 end
 
--- Check if the ball is inside the detection circle
-local function isBallInsideCircle(circle)
+-- Check if the ball is inside the detection sphere
+local function isBallInsideSphere(sphere)
     if bladeBall and bladeBall:IsDescendantOf(workspace) then
-        local distance = (bladeBall.Position - circle.Position).Magnitude
-        return distance <= circleRadius
+        local distance = (bladeBall.Position - sphere.Position).Magnitude
+        return distance <= sphereRadius
     end
     return false
 end
 
 -- Perform the action (hit the ball)
 local function hitBladeBall()
-    if isBallInsideCircle(detectionCircle) then
+    if isBallInsideSphere(detectionSphere) then
         print("Hit the Blade Ball!") -- Replace this with the actual action
         -- Example: Apply a force to the ball
         local ballVelocity = Instance.new("BodyVelocity")
-        ballVelocity.Velocity = Vector3.new(0, 30, 0) -- Adjust direction and speed
+        ballVelocity.Velocity = Vector3.new(0, 50, 0) -- Adjust direction and speed
         ballVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
         ballVelocity.Parent = bladeBall
         game.Debris:AddItem(ballVelocity, 0.2) -- Remove force after 0.2 seconds
     else
-        print("Blade Ball is not inside the circle.")
+        print("Blade Ball is not inside the sphere.")
     end
 end
 
--- Set up the detection circle
-local detectionCircle = createCircle()
+-- Set up the detection sphere
+local detectionSphere = createSphere()
 
--- Update the circle's position in real-time
+-- Update the sphere's position in real-time
 runService.RenderStepped:Connect(function()
-    updateCircle(detectionCircle)
+    updateSphere(detectionSphere)
 end)
 
 -- Handle input for both PC and mobile
