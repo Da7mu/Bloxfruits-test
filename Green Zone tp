@@ -19,19 +19,22 @@ local function createHighlight(target)
     return highlight
 end
 
--- Function to find nearest enemy
+-- Function to find nearest enemy (only targets enemies, not teammates)
 local function findNearestEnemy()
     local closestEnemy = nil
     local shortestDistance = math.huge
 
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
-            local enemyHead = player.Character.Head
-            local distance = (enemyHead.Position - head.Position).Magnitude
+            -- Ensure the player is an enemy (not on the same team)
+            if player.Team ~= localPlayer.Team then
+                local enemyHead = player.Character.Head
+                local distance = (enemyHead.Position - head.Position).Magnitude
 
-            if distance < shortestDistance then
-                shortestDistance = distance
-                closestEnemy = player
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestEnemy = player
+                end
             end
         end
     end
