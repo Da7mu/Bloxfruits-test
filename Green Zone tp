@@ -1,89 +1,149 @@
--- Flying Teleport Script with GUI and Keybinds (Updated)
+-- Blox Fruits Script Menu (Comprehensive)
+
+-- Setup references
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local speed = 100  -- Speed of flying to the island (adjust as needed)
+local mouse = player:GetMouse()
 
 -- GUI Setup
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = playerGui
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 250, 0, 300)
-frame.Position = UDim2.new(0.5, -125, 0.5, -150)
+frame.Size = UDim2.new(0, 300, 0, 400)
+frame.Position = UDim2.new(0.5, -150, 0.5, -200)
 frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 frame.BackgroundTransparency = 0.5
 frame.Parent = screenGui
 
--- Create Buttons for Teleportation
-local function createButton(name, position, islandName)
+-- Create Function to Make Buttons
+local function createButton(name, position, action)
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 200, 0, 50)
+    button.Size = UDim2.new(0, 260, 0, 40)
     button.Position = position
-    button.Text = "Fly to " .. name
+    button.Text = name
     button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
     button.Parent = frame
 
     button.MouseButton1Click:Connect(function()
-        -- Look for the island in Workspace
-        local island = game.Workspace:FindFirstChild(islandName)
-        if island then
-            if island.PrimaryPart then
-                -- Start flying to the island
-                flyToIsland(island)
-            else
-                warn(islandName .. " does not have a PrimaryPart!")
-            end
-        else
-            warn(islandName .. " not found!")
-        end
+        action()
     end)
 end
 
--- Function to simulate flying to the island
-local function flyToIsland(island)
-    local destination = island.PrimaryPart.Position
-    local currentPosition = humanoidRootPart.Position
-
-    -- Loop to fly to the island smoothly
-    while (humanoidRootPart.Position - destination).Magnitude > 5 do
-        -- Move the player towards the island
-        local direction = (destination - humanoidRootPart.Position).unit
-        humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * speed * 0.1  -- Speed control
-        
-        -- Add a small wait time to create smooth movement
-        wait(0.03)
+-- 1. Teleportation to Island Function
+local function teleportToIsland(islandName)
+    local island = game.Workspace:FindFirstChild(islandName)
+    if island and island.PrimaryPart then
+        humanoidRootPart.CFrame = CFrame.new(island.PrimaryPart.Position)
+        print("Teleported to " .. islandName)
+    else
+        warn(islandName .. " not found!")
     end
-
-    -- Ensure we land exactly on the island
-    humanoidRootPart.CFrame = CFrame.new(destination)
-    print("Arrived at " .. island.Name)
 end
 
--- Create teleport buttons for different islands
-createButton("Cafe Island", UDim2.new(0.5, -100, 0, 50), "CafeIsland")
-createButton("Magma Island", UDim2.new(0.5, -100, 0, 120), "MagmaIsland")
-createButton("Skylands", UDim2.new(0.5, -100, 0, 190), "Skylands")
+-- 2. Auto Farming Function (Auto-attacking nearby enemies)
+local function autoFarm()
+    while true do
+        -- Check for nearby enemies
+        local closestEnemy = nil
+        local minDist = math.huge
 
--- Keybind Teleportation (example: 'T' key to fly to Cafe Island)
-local UserInputService = game:GetService("UserInputService")
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-
-    if input.UserInputType == Enum.UserInputType.Keyboard then
-        if input.KeyCode == Enum.KeyCode.T then
-            -- Fly to Cafe Island when 'T' is pressed
-            local cafeIsland = game.Workspace:FindFirstChild("CafeIsland")
-            if cafeIsland then
-                if cafeIsland.PrimaryPart then
-                    flyToIsland(cafeIsland)
-                    print("Flying to Cafe Island!")
-                else
-                    warn("CafeIsland does not have a PrimaryPart!")
+        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
+            if enemy:FindFirstChild("HumanoidRootPart") then
+                local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+                if dist < minDist then
+                    minDist = dist
+                    closestEnemy = enemy
                 end
-            else
-                warn("CafeIsland not found!")
             end
         end
+
+        -- Attack the closest enemy
+        if closestEnemy then
+            local targetPosition = closestEnemy.HumanoidRootPart.Position
+            humanoidRootPart.CFrame = CFrame.new(targetPosition)
+            -- Assuming an attack function exists for this
+            -- example: Fire some attack (simplified)
+            print("Attacking " .. closestEnemy.Name)
+        end
+
+        wait(1)
     end
+end
+
+-- 3. Auto Fruit Finder Function
+local function autoFruitFinder()
+    while true do
+        for _, fruit in pairs(game.Workspace:GetChildren()) do
+            if fruit.Name == "Fruit" then
+                if (humanoidRootPart.Position - fruit.Position).Magnitude < 100 then
+                    -- Picking up the fruit (simplified)
+                    print("Found Fruit: " .. fruit.Name)
+                    fireclickdetector(fruit:FindFirstChildOfClass("ClickDetector"))
+                end
+            end
+        end
+        wait(5)
+    end
+end
+
+-- 4. Toggle ESP for Players
+local function toggleESP()
+    local espEnabled = false
+    while espEnabled do
+        for _, enemy in pairs(game.Workspace:GetChildren()) do
+            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") then
+                local espPart = Instance.new("Part")
+                espPart.Size = Vector3.new(2, 2, 2)
+                espPart.Position = enemy.HumanoidRootPart.Position
+                espPart.Anchored = true
+                espPart.CanCollide = false
+                espPart.Material = Enum.Material.SmoothPlastic
+                espPart.Color = Color3.fromRGB(255, 0, 0)
+                espPart.Parent = game.Workspace
+                -- Clean up ESP parts
+                game:GetService("Debris"):AddItem(espPart, 1)
+            end
+        end
+        wait(0.5)
+    end
+end
+
+-- 5. Stat Reset (Use a stat reset item or custom script for stats)
+local function resetStats()
+    -- Assuming you have a script for resetting stats or using an item
+    print("Stats Reset!")
+    -- For example:
+    -- character:FindFirstChild("StatResetItem"):Fire()
+end
+
+-- 6. Miscellaneous Options (example: infinite stamina)
+local function infiniteStamina()
+    while true do
+        -- Assuming player has stamina and the humanoid holds a Stamina property
+        character:FindFirstChild("Humanoid").Stamina = 100
+        wait(0.1)
+    end
+end
+
+-- Create Buttons for the Menu
+createButton("Teleport to Cafe Island", UDim2.new(0, 20, 0, 20), function()
+    teleportToIsland("CafeIsland")
 end)
+createButton("Start Auto Farming", UDim2.new(0, 20, 0, 80), function()
+    autoFarm()
+end)
+createButton("Start Auto Fruit Finder", UDim2.new(0, 20, 0, 140), function()
+    autoFruitFinder()
+end)
+createButton("Toggle ESP", UDim2.new(0, 20, 0, 200), function()
+    toggleESP()
+end)
+createButton("Reset Stats", UDim2.new(0, 20, 0, 260), function()
+    resetStats()
+end)
+createButton("Infinite Stamina", UDim2.new(0, 20, 0, 320), function()
+    infiniteStamina()
+end)
+
