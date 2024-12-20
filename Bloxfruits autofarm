@@ -1,82 +1,93 @@
--- Blox Fruits Auto Farm Quest Script (Simplified)
+-- Blox Fruits Auto Farm Quest Level Script
 
 -- Setup references
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local questGiver = game.Workspace:WaitForChild("QuestGiver")  -- Quest giver location
-local questTargetName = "Bandit"  -- Example enemy for the quest
-local questRequiredKills = 10  -- How many enemies need to be defeated for quest completion
-local questProgress = 0  -- Track progress
+local humanoid = character:WaitForChild("Humanoid")
+local mouse = player:GetMouse()
 
--- Function to accept quest (simple example)
-local function acceptQuest()
-    -- Find quest giver
-    local questPart = questGiver:FindFirstChild("QuestPart")  -- Quest interaction part
-    if questPart then
-        -- Simulate interacting with the quest giver
-        fireclickdetector(questPart:FindFirstChildOfClass("ClickDetector"))
-        print("Quest accepted: Defeat " .. questTargetName .. "!")
-    else
-        warn("Quest giver not found!")
-    end
+-- GUI Setup (For enabling/disabling the Auto Farm)
+local playerGui = player:WaitForChild("PlayerGui")
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 100)
+frame.Position = UDim2.new(0.5, -150, 0.5, -50)
+frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frame.BackgroundTransparency = 0.5
+frame.Parent = screenGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 260, 0, 40)
+button.Position = UDim2.new(0, 20, 0, 20)
+button.Text = "Toggle Auto Farm"
+button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+button.Parent = frame
+
+-- Auto Farming Logic
+local isAutoFarming = false
+local questTargetName = "Bandit"  -- Example NPC (change as needed)
+local targetHitboxSize = Vector3.new(10, 10, 10)  -- Enlarge hitbox
+local flyingHeight = 20  -- Height to fly above NPCs
+
+-- Function to enlarge the hitbox (used to attack NPCs while flying)
+local function enlargeHitbox()
+    humanoid.HipWidth = 10
+    humanoid.HipHeight = 10
+    humanoidRootPart.Size = targetHitboxSize
 end
 
--- Function to find and attack enemies
-local function findAndAttackEnemies()
-    while questProgress < questRequiredKills do
-        local target = nil
-        local closestEnemyDist = math.huge
-        
-        -- Search for the target enemies in the game
-        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
-            if enemy.Name == questTargetName and enemy:FindFirstChild("HumanoidRootPart") then
-                -- Find the closest enemy
-                local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
-                if dist < closestEnemyDist then
-                    closestEnemyDist = dist
-                    target = enemy
+-- Function to fly above NPCs
+local function flyAboveNPCs()
+    humanoidRootPart.CFrame = humanoidRootPart.CFrame * CFrame.new(0, flyingHeight, 0)
+end
+
+-- Function to handle Auto Farming
+local function autoFarm()
+    while isAutoFarming do
+        -- Fly above NPCs
+        flyAboveNPCs()
+
+        -- Find the closest NPC to attack
+        local closestEnemy = nil
+        local minDist = math.huge
+
+        for _, enemy in pairs(game.Workspace:GetChildren()) do
+            if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
+                if enemy.Name == questTargetName then
+                    local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+                    if dist < minDist then
+                        minDist = dist
+                        closestEnemy = enemy
+                    end
                 end
             end
         end
-        
-        -- If a target enemy is found, move and attack it
-        if target then
-            humanoidRootPart.CFrame = CFrame.new(target.HumanoidRootPart.Position)
-            -- Simulate attack (e.g., a basic melee attack)
-            -- Replace this with actual combat code, like pressing a button or activating an ability
-            print("Attacking " .. target.Name)
-            wait(1)  -- Attack interval (you can make this faster/slower depending on game)
-            
-            -- Assuming the enemy has been defeated
-            -- Increment quest progress
-            questProgress = questProgress + 1
-            print("Quest Progress: " .. questProgress .. "/" .. questRequiredKills)
-        else
-            print("No enemies found, waiting...")
+
+        -- If a valid NPC is found, simulate an attack (can replace with actual attack logic)
+        if closestEnemy then
+            humanoidRootPart.CFrame = CFrame.new(closestEnemy.HumanoidRootPart.Position)
+            print("Attacking " .. closestEnemy.Name)
+            -- You can add combat logic here to actually attack, e.g., by using skills or pressing M1
         end
-        
-        wait(2)  -- Wait before searching for new enemies
+
+        wait(1)  -- Adjust wait time as needed
     end
 end
 
--- Function to turn in the quest (after killing enough enemies)
-local function turnInQuest()
-    -- Find the quest giver again (or you can add logic for different locations)
-    local questPart = questGiver:FindFirstChild("QuestPart")
-    if questPart then
-        -- Simulate turning in the quest
-        fireclickdetector(questPart:FindFirstChildOfClass("ClickDetector"))
-        print("Quest Completed! Returning to Quest Giver.")
+-- Toggle Auto Farming function
+button.MouseButton1Click:Connect(function()
+    isAutoFarming = not isAutoFarming
+    if isAutoFarming then
+        print("Auto Farm Enabled")
+        enlargeHitbox()  -- Enlarge the hitbox before starting
+        autoFarm()  -- Start auto farming
     else
-        warn("Quest giver not found for turn-in!")
+        print("Auto Farm Disabled")
+        humanoid.HipWidth = 2  -- Reset the hitbox to normal
+        humanoid.HipHeight = 2
+        humanoidRootPart.Size = Vector3.new(2, 2, 2)  -- Reset the hitbox size to default
     end
-end
-
--- Main Loop
-while true do
-    acceptQuest()  -- Accept the quest from the giver
-    findAndAttackEnemies()  -- Start farming enemies for the quest
-    turnInQuest()  -- After quest is complete, turn it in
-    wait(5)  -- Delay before accepting a new quest
-end
+end)
