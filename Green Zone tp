@@ -1,4 +1,4 @@
--- Blox Fruits Script Menu (Comprehensive)
+-- Blox Fruits Script Menu
 
 -- Setup references
 local player = game.Players.LocalPlayer
@@ -31,7 +31,7 @@ local function createButton(name, position, action)
     end)
 end
 
--- 1. Teleportation to Island Function
+-- Teleportation to Island Function
 local function teleportToIsland(islandName)
     local island = game.Workspace:FindFirstChild(islandName)
     if island and island.PrimaryPart then
@@ -42,15 +42,18 @@ local function teleportToIsland(islandName)
     end
 end
 
--- 2. Auto Farming Function (Auto-attacking nearby enemies)
+-- Auto Farming Function
 local function autoFarm()
+    local target = nil
+
+    -- Continuously farm and attack enemies
     while true do
-        -- Check for nearby enemies
+        -- Find the closest enemy
         local closestEnemy = nil
         local minDist = math.huge
 
-        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
-            if enemy:FindFirstChild("HumanoidRootPart") then
+        for _, enemy in pairs(game.Workspace:GetChildren()) do
+            if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
                 local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
                 if dist < minDist then
                     minDist = dist
@@ -61,10 +64,8 @@ local function autoFarm()
 
         -- Attack the closest enemy
         if closestEnemy then
-            local targetPosition = closestEnemy.HumanoidRootPart.Position
-            humanoidRootPart.CFrame = CFrame.new(targetPosition)
-            -- Assuming an attack function exists for this
-            -- example: Fire some attack (simplified)
+            humanoidRootPart.CFrame = CFrame.new(closestEnemy.HumanoidRootPart.Position)
+            -- Simulate attacking
             print("Attacking " .. closestEnemy.Name)
         end
 
@@ -72,78 +73,33 @@ local function autoFarm()
     end
 end
 
--- 3. Auto Fruit Finder Function
+-- Auto Fruit Finder Function
 local function autoFruitFinder()
     while true do
         for _, fruit in pairs(game.Workspace:GetChildren()) do
-            if fruit.Name == "Fruit" then
-                if (humanoidRootPart.Position - fruit.Position).Magnitude < 100 then
-                    -- Picking up the fruit (simplified)
-                    print("Found Fruit: " .. fruit.Name)
-                    fireclickdetector(fruit:FindFirstChildOfClass("ClickDetector"))
+            if fruit.Name == "Fruit" and fruit:FindFirstChild("ClickDetector") then
+                local dist = (humanoidRootPart.Position - fruit.Position).Magnitude
+                if dist < 100 then
+                    -- Simulate clicking the fruit (pick up)
+                    fireclickdetector(fruit:FindFirstChild("ClickDetector"))
+                    print("Picked up fruit: " .. fruit.Name)
                 end
             end
         end
-        wait(5)
+        wait(5)  -- Delay between fruit checks
     end
 end
 
--- 4. Toggle ESP for Players
-local function toggleESP()
-    local espEnabled = false
-    while espEnabled do
-        for _, enemy in pairs(game.Workspace:GetChildren()) do
-            if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") then
-                local espPart = Instance.new("Part")
-                espPart.Size = Vector3.new(2, 2, 2)
-                espPart.Position = enemy.HumanoidRootPart.Position
-                espPart.Anchored = true
-                espPart.CanCollide = false
-                espPart.Material = Enum.Material.SmoothPlastic
-                espPart.Color = Color3.fromRGB(255, 0, 0)
-                espPart.Parent = game.Workspace
-                -- Clean up ESP parts
-                game:GetService("Debris"):AddItem(espPart, 1)
-            end
-        end
-        wait(0.5)
-    end
-end
-
--- 5. Stat Reset (Use a stat reset item or custom script for stats)
-local function resetStats()
-    -- Assuming you have a script for resetting stats or using an item
-    print("Stats Reset!")
-    -- For example:
-    -- character:FindFirstChild("StatResetItem"):Fire()
-end
-
--- 6. Miscellaneous Options (example: infinite stamina)
-local function infiniteStamina()
-    while true do
-        -- Assuming player has stamina and the humanoid holds a Stamina property
-        character:FindFirstChild("Humanoid").Stamina = 100
-        wait(0.1)
-    end
-end
-
--- Create Buttons for the Menu
-createButton("Teleport to Cafe Island", UDim2.new(0, 20, 0, 20), function()
+-- Add buttons for the GUI menu
+createButton("Teleport to CafeIsland", UDim2.new(0, 20, 0, 20), function()
     teleportToIsland("CafeIsland")
 end)
+
 createButton("Start Auto Farming", UDim2.new(0, 20, 0, 80), function()
     autoFarm()
 end)
+
 createButton("Start Auto Fruit Finder", UDim2.new(0, 20, 0, 140), function()
     autoFruitFinder()
-end)
-createButton("Toggle ESP", UDim2.new(0, 20, 0, 200), function()
-    toggleESP()
-end)
-createButton("Reset Stats", UDim2.new(0, 20, 0, 260), function()
-    resetStats()
-end)
-createButton("Infinite Stamina", UDim2.new(0, 20, 0, 320), function()
-    infiniteStamina()
 end)
 
