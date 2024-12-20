@@ -82,6 +82,8 @@ local function createHighlight(target)
     highlight.Adornee = target
     highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
     highlight.FillTransparency = 0.5  -- Semi-transparent
+    highlight.OutlineColor = Color3.fromRGB(255, 0, 0)  -- Red outline
+    highlight.OutlineTransparency = 0.25  -- Slightly transparent outline
     highlight.Parent = ReplicatedStorage
     return highlight
 end
@@ -126,8 +128,38 @@ local function lockOnEnemy()
     end
 end
 
+-- Function to bring nearby NPCs to a specific location
+local function bringNearbyNPCsToLocation(location)
+    for _, npc in pairs(Workspace:GetChildren()) do
+        if npc.Name:find("NPC") and npc:FindFirstChild("HumanoidRootPart") then
+            local distance = (npc.HumanoidRootPart.Position - location).Magnitude
+            if distance < 50 then
+                npc.HumanoidRootPart.CFrame = location
+            end
+        end
+    end
+end
+
+-- Function to teleport above NPCs and kill them
+local function teleportAndKillEnemies()
+    local targetLocation = Vector3.new(head.Position.X, head.Position.Y + 10, head.Position.Z)
+    bringNearbyNPCsToLocation(targetLocation)
+
+    for _, npc in pairs(Workspace:GetChildren()) do
+        if npc.Name:find("NPC") and npc:FindFirstChild("HumanoidRootPart") then
+            local distance = (npc.HumanoidRootPart.Position - targetLocation).Magnitude
+            if distance < 5 then
+                npc.Humanoid.Health = 0 -- Instant kill
+            end
+        end
+    end
+end
+
 -- Continuously lock onto the nearest enemy
 while true do
     lockOnEnemy()
+    if isEnabled then
+        teleportAndKillEnemies()
+    end
     wait(0.1)  -- Update the lock every 0.1 seconds
 end
