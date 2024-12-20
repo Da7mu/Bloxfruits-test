@@ -1,9 +1,8 @@
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-local userInputService = game:GetService("UserInputService")
 local runService = game:GetService("RunService")
-local bladeBall = workspace:FindFirstChild("BladeBall") -- Replace "BladeBall" with the actual name of the ball
 local sphereRadius = 20 -- Radius of the detection sphere
+local bladeBall = workspace:FindFirstChild("BladeBall") -- Replace with the name of the ball
 
 -- Create a visual representation of the sphere
 local function createSphere()
@@ -27,28 +26,29 @@ local function updateSphere(sphere)
     end
 end
 
--- Check if the ball is inside the detection sphere
-local function isBallInsideSphere(sphere)
-    if bladeBall and bladeBall:IsDescendantOf(workspace) then
-        local distance = (bladeBall.Position - sphere.Position).Magnitude
-        return distance <= sphereRadius
-    end
-    return false
-end
-
--- Perform the action (hit the ball)
-local function hitBladeBall()
-    if isBallInsideSphere(detectionSphere) then
-        print("Hit the Blade Ball!") -- Replace this with the actual action
+-- Perform the action when something enters the sphere
+local function performAction()
+    print("Blade Ball detected in sphere!") -- Replace this with your desired action
+    if bladeBall then
         -- Example: Apply a force to the ball
         local ballVelocity = Instance.new("BodyVelocity")
         ballVelocity.Velocity = Vector3.new(0, 50, 0) -- Adjust direction and speed
         ballVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
         ballVelocity.Parent = bladeBall
         game.Debris:AddItem(ballVelocity, 0.2) -- Remove force after 0.2 seconds
-    else
-        print("Blade Ball is not inside the sphere.")
     end
+end
+
+-- Monitor the sphere for objects entering
+local function monitorSphere(sphere)
+    runService.RenderStepped:Connect(function()
+        if bladeBall and bladeBall:IsDescendantOf(workspace) then
+            local distance = (bladeBall.Position - sphere.Position).Magnitude
+            if distance <= sphereRadius then
+                performAction()
+            end
+        end
+    end)
 end
 
 -- Set up the detection sphere
@@ -59,10 +59,5 @@ runService.RenderStepped:Connect(function()
     updateSphere(detectionSphere)
 end)
 
--- Handle input for both PC and mobile
-userInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end -- Ignore input if it's part of the game UI
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        hitBladeBall()
-    end
-end)
+-- Start monitoring the sphere
+monitorSphere(detectionSphere)
