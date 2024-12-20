@@ -1,105 +1,61 @@
--- Blox Fruits Script Menu
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- Setup references
-local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local mouse = player:GetMouse()
+-- Local player
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local head = character:WaitForChild("Head")
+local camera = game.Workspace.CurrentCamera
 
--- GUI Setup
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = playerGui
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 400)
-frame.Position = UDim2.new(0.5, -150, 0.5, -200)
-frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-frame.BackgroundTransparency = 0.5
-frame.Parent = screenGui
-
--- Create Function to Make Buttons
-local function createButton(name, position, action)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 260, 0, 40)
-    button.Position = position
-    button.Text = name
-    button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-    button.Parent = frame
-
-    button.MouseButton1Click:Connect(function()
-        action()
-    end)
+-- Highlight setup
+local function createHighlight(target)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = target
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+    highlight.FillTransparency = 0.5  -- Semi-transparent
+    highlight.Parent = ReplicatedStorage
+    return highlight
 end
 
--- Teleportation to Island Function
-local function teleportToIsland(islandName)
-    local island = game.Workspace:FindFirstChild(islandName)
-    if island and island.PrimaryPart then
-        humanoidRootPart.CFrame = CFrame.new(island.PrimaryPart.Position)
-        print("Teleported to " .. islandName)
-    else
-        warn(islandName .. " not found!")
-    end
-end
+-- Function to find nearest enemy
+local function findNearestEnemy()
+    local closestEnemy = nil
+    local shortestDistance = math.huge
 
--- Auto Farming Function
-local function autoFarm()
-    local target = nil
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            local enemyHead = player.Character.Head
+            local distance = (enemyHead.Position - head.Position).Magnitude
 
-    -- Continuously farm and attack enemies
-    while true do
-        -- Find the closest enemy
-        local closestEnemy = nil
-        local minDist = math.huge
-
-        for _, enemy in pairs(game.Workspace:GetChildren()) do
-            if enemy:IsA("Model") and enemy:FindFirstChild("HumanoidRootPart") then
-                local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
-                if dist < minDist then
-                    minDist = dist
-                    closestEnemy = enemy
-                end
+            if distance < shortestDistance then
+                shortestDistance = distance
+                closestEnemy = player
             end
         end
+    end
 
-        -- Attack the closest enemy
-        if closestEnemy then
-            humanoidRootPart.CFrame = CFrame.new(closestEnemy.HumanoidRootPart.Position)
-            -- Simulate attacking
-            print("Attacking " .. closestEnemy.Name)
+    return closestEnemy
+end
+
+-- Auto-locking on enemy's head and highlight
+local function lockOnEnemy()
+    local nearestEnemy = findNearestEnemy()
+
+    if nearestEnemy and nearestEnemy.Character then
+        local enemyHead = nearestEnemy.Character.Head
+        camera.CFrame = CFrame.new(camera.CFrame.Position, enemyHead.Position)  -- Lock camera to enemy's head
+
+        -- Highlight enemy if not already highlighted
+        if not enemyHead:FindFirstChild("Highlight") then
+            createHighlight(enemyHead)
         end
-
-        wait(1)
     end
 end
 
--- Auto Fruit Finder Function
-local function autoFruitFinder()
-    while true do
-        for _, fruit in pairs(game.Workspace:GetChildren()) do
-            if fruit.Name == "Fruit" and fruit:FindFirstChild("ClickDetector") then
-                local dist = (humanoidRootPart.Position - fruit.Position).Magnitude
-                if dist < 100 then
-                    -- Simulate clicking the fruit (pick up)
-                    fireclickdetector(fruit:FindFirstChild("ClickDetector"))
-                    print("Picked up fruit: " .. fruit.Name)
-                end
-            end
-        end
-        wait(5)  -- Delay between fruit checks
-    end
+-- Continuously lock onto the nearest enemy
+while true do
+    lockOnEnemy()
+    wait(0.1)  -- Update the lock every 0.1 seconds
 end
-
--- Add buttons for the GUI menu
-createButton("Teleport to CafeIsland", UDim2.new(0, 20, 0, 20), function()
-    teleportToIsland("CafeIsland")
-end)
-
-createButton("Start Auto Farming", UDim2.new(0, 20, 0, 80), function()
-    autoFarm()
-end)
-
-createButton("Start Auto Fruit Finder", UDim2.new(0, 20, 0, 140), function()
-    autoFruitFinder()
-end)
-
