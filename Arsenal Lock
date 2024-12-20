@@ -1,0 +1,133 @@
+-- Services
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+
+-- Local player
+local localPlayer = Players.LocalPlayer
+local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
+local head = character:WaitForChild("Head")
+local camera = game.Workspace.CurrentCamera
+
+-- Enable/Disable button settings
+local isEnabled = false
+local buttonSize = UDim2.new(0, 50, 0, 50)  -- Size of the button
+local buttonPosition = UDim2.new(0, 100, 0, 100)  -- Initial position of the button
+
+-- Create button
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = localPlayer.PlayerGui
+
+local button = Instance.new("TextButton")
+button.Size = buttonSize
+button.Position = buttonPosition
+button.Text = "ON"
+button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)  -- Green when enabled
+button.TextColor3 = Color3.fromRGB(255, 255, 255)  -- White text
+button.TextSize = 14
+button.AnchorPoint = Vector2.new(0.5, 0.5)
+button.Parent = screenGui
+
+-- Make the button draggable
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function onDragBegin(input)
+    dragging = true
+    dragInput = input
+    dragStart = input.Position
+    startPos = button.Position
+end
+
+local function onDragMove(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end
+
+local function onDragEnd()
+    dragging = false
+end
+
+button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        onDragBegin(input)
+    end
+end)
+
+button.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        onDragMove(input)
+    end
+end)
+
+button.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        onDragEnd()
+    end
+end)
+
+-- Toggle the button functionality
+button.MouseButton1Click:Connect(function()
+    isEnabled = not isEnabled
+    button.Text = isEnabled and "OFF" or "ON"
+    button.BackgroundColor3 = isEnabled and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(0, 255, 0)  -- Red when disabled, Green when enabled
+end)
+
+-- Highlight setup
+local function createHighlight(target)
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = target
+    highlight.FillColor = Color3.fromRGB(255, 0, 0)  -- Red color for highlight
+    highlight.FillTransparency = 0.5  -- Semi-transparent
+    highlight.Parent = ReplicatedStorage
+    return highlight
+end
+
+-- Function to find nearest enemy (only targets enemies, not teammates)
+local function findNearestEnemy()
+    local closestEnemy = nil
+    local shortestDistance = math.huge
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= localPlayer and player.Character and player.Character:FindFirstChild("Head") then
+            -- Ensure the player is an enemy (not on the same team)
+            if player.Team ~= localPlayer.Team then
+                local enemyHead = player.Character.Head
+                local distance = (enemyHead.Position - head.Position).Magnitude
+
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    closestEnemy = player
+                end
+            end
+        end
+    end
+
+    return closestEnemy
+end
+
+-- Auto-locking on enemy's head and highlight
+local function lockOnEnemy()
+    if not isEnabled then return end  -- Only lock if enabled
+
+    local nearestEnemy = findNearestEnemy()
+
+    if nearestEnemy and nearestEnemy.Character then
+        local enemyHead = nearestEnemy.Character.Head
+        camera.CFrame = CFrame.new(camera.CFrame.Position, enemyHead.Position)  -- Lock camera to enemy's head
+
+        -- Highlight enemy if not already highlighted
+        if not enemyHead:FindFirstChild("Highlight") then
+            createHighlight(enemyHead)
+        end
+    end
+end
+
+-- Continuously lock onto the nearest enemy
+while true do
+    lockOnEnemy()
+    wait(0.1)  -- Update the lock every 0.1 seconds
+end
