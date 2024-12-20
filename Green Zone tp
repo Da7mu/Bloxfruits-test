@@ -1,7 +1,9 @@
--- Teleport Script with GUI and Keybinds
+-- Flying Teleport Script with GUI and Keybinds (Updated)
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local speed = 100  -- Speed of flying to the island (adjust as needed)
 
 -- GUI Setup
 local screenGui = Instance.new("ScreenGui")
@@ -18,18 +20,44 @@ local function createButton(name, position, islandName)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 200, 0, 50)
     button.Position = position
-    button.Text = "Teleport to " .. name
+    button.Text = "Fly to " .. name
     button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
     button.Parent = frame
 
     button.MouseButton1Click:Connect(function()
+        -- Look for the island in Workspace
         local island = game.Workspace:FindFirstChild(islandName)
-        if island and island.PrimaryPart then
-            player.Character:SetPrimaryPartCFrame(island.PrimaryPart.CFrame)
+        if island then
+            if island.PrimaryPart then
+                -- Start flying to the island
+                flyToIsland(island)
+            else
+                warn(islandName .. " does not have a PrimaryPart!")
+            end
         else
             warn(islandName .. " not found!")
         end
     end)
+end
+
+-- Function to simulate flying to the island
+local function flyToIsland(island)
+    local destination = island.PrimaryPart.Position
+    local currentPosition = humanoidRootPart.Position
+
+    -- Loop to fly to the island smoothly
+    while (humanoidRootPart.Position - destination).Magnitude > 5 do
+        -- Move the player towards the island
+        local direction = (destination - humanoidRootPart.Position).unit
+        humanoidRootPart.CFrame = humanoidRootPart.CFrame + direction * speed * 0.1  -- Speed control
+        
+        -- Add a small wait time to create smooth movement
+        wait(0.03)
+    end
+
+    -- Ensure we land exactly on the island
+    humanoidRootPart.CFrame = CFrame.new(destination)
+    print("Arrived at " .. island.Name)
 end
 
 -- Create teleport buttons for different islands
@@ -37,17 +65,22 @@ createButton("Cafe Island", UDim2.new(0.5, -100, 0, 50), "CafeIsland")
 createButton("Magma Island", UDim2.new(0.5, -100, 0, 120), "MagmaIsland")
 createButton("Skylands", UDim2.new(0.5, -100, 0, 190), "Skylands")
 
--- Keybind Teleportation (example: 'T' key to teleport to Cafe Island)
+-- Keybind Teleportation (example: 'T' key to fly to Cafe Island)
 local UserInputService = game:GetService("UserInputService")
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
 
     if input.UserInputType == Enum.UserInputType.Keyboard then
         if input.KeyCode == Enum.KeyCode.T then
-            -- Teleport to Cafe Island when 'T' is pressed
+            -- Fly to Cafe Island when 'T' is pressed
             local cafeIsland = game.Workspace:FindFirstChild("CafeIsland")
-            if cafeIsland and cafeIsland.PrimaryPart then
-                player.Character:SetPrimaryPartCFrame(cafeIsland.PrimaryPart.CFrame)
+            if cafeIsland then
+                if cafeIsland.PrimaryPart then
+                    flyToIsland(cafeIsland)
+                    print("Flying to Cafe Island!")
+                else
+                    warn("CafeIsland does not have a PrimaryPart!")
+                end
             else
                 warn("CafeIsland not found!")
             end
