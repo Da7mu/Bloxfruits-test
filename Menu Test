@@ -1,0 +1,80 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "RoundedMenuGui"
+screenGui.Parent = playerGui
+
+-- Create the main menu frame
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "MenuFrame"
+menuFrame.Size = UDim2.new(0, 300, 0, 200) -- Width: 300px, Height: 200px
+menuFrame.Position = UDim2.new(0.5, -150, 0.5, -100) -- Center of the screen
+menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+menuFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2) -- Dark gray
+menuFrame.Parent = screenGui
+
+-- Add rounded corners to the menu frame
+local uiCorner = Instance.new("UICorner")
+uiCorner.CornerRadius = UDim.new(0, 20) -- Adjust the radius for roundness
+uiCorner.Parent = menuFrame
+
+-- Add a title to the menu
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Size = UDim2.new(1, 0, 0, 50) -- Full width, height: 50px
+titleLabel.Position = UDim2.new(0, 0, 0, 0)
+titleLabel.BackgroundTransparency = 1 -- Transparent background
+titleLabel.Text = "Menu Title"
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextSize = 24
+titleLabel.TextColor3 = Color3.new(1, 1, 1) -- White text
+titleLabel.Parent = menuFrame
+
+-- Add a close button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Size = UDim2.new(0, 50, 0, 50) -- 50x50px button
+closeButton.Position = UDim2.new(1, -60, 0, 10) -- Top-right corner with padding
+closeButton.AnchorPoint = Vector2.new(1, 0)
+closeButton.BackgroundColor3 = Color3.new(1, 0.2, 0.2) -- Red color
+closeButton.Text = "X"
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 18
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Parent = menuFrame
+
+-- Add rounded corners to the close button
+local closeButtonCorner = Instance.new("UICorner")
+closeButtonCorner.CornerRadius = UDim.new(1, 0) -- Fully round button
+closeButtonCorner.Parent = closeButton
+
+-- Close the menu when the button is clicked
+closeButton.MouseButton1Click:Connect(function()
+    menuFrame.Visible = false
+end)
+
+-- Add additional menu buttons
+for i = 1, 3 do
+    local button = Instance.new("TextButton")
+    button.Name = "MenuButton" .. i
+    button.Size = UDim2.new(0.8, 0, 0, 40) -- 80% width, 40px height
+    button.Position = UDim2.new(0.1, 0, 0, 60 + (i - 1) * 50) -- Spaced 10px apart
+    button.BackgroundColor3 = Color3.new(0.3, 0.6, 0.9) -- Blue color
+    button.Text = "Button " .. i
+    button.Font = Enum.Font.Gotham
+    button.TextSize = 18
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.Parent = menuFrame
+
+    -- Add rounded corners to each button
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, 10) -- Slight rounding
+    buttonCorner.Parent = button
+
+    -- Example action for button click
+    button.MouseButton1Click:Connect(function()
+        print("Clicked Button " .. i)
+    end)
+end
