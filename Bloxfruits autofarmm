@@ -1,0 +1,144 @@
+-- Server Script: Place this in ServerScriptService
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+-- Create a RemoteEvent for quest updates
+local questEvent = Instance.new("RemoteEvent")
+questEvent.Name = "QuestEvent"
+questEvent.Parent = ReplicatedStorage
+
+-- NPC Quest Giver
+local npc = script.Parent  -- Quest giver NPC
+local questAccepted = false
+local npcTarget = game.Workspace:WaitForChild("TargetNPCs")  -- Location for NPC spawns
+
+-- Function to handle quest acceptance
+local function startQuest(player)
+    if not questAccepted then
+        print(player.Name .. " has started the quest to defeat NPCs!")
+        questAccepted = true
+        
+        -- Spawn NPCs to defeat
+        local npc1 = npcTarget:Clone()  -- Clone NPC1 from the target spawn point
+        npc1.Parent = game.Workspace
+        npc1.Position = Vector3.new(100, 10, 100)  -- Example spawn location
+    else
+        print(player.Name .. " has already accepted the quest.")
+    end
+end
+
+-- NPC Combat System
+local function onNPCHit(npc, damage)
+    npc.Health = npc.Health - damage
+    if npc.Health <= 0 then
+        npc:Destroy()
+        print(npc.Name .. " has been defeated!")
+    end
+end
+
+-- Quest Completion and Reward
+local function checkQuestCompletion(player)
+    if npcTarget and npcTarget.Parent == nil then
+        print(player.Name .. " has completed the quest!")
+        questEvent:FireClient(player, "Quest Completed!")  -- Notify player of quest completion
+    end
+end
+
+-- Detect when the player interacts with the Quest Giver NPC
+npc.Touched:Connect(function(hit)
+    local character = hit.Parent
+    if character and character:FindFirstChild("Humanoid") then
+        local player = game.Players:GetPlayerFromCharacter(character)
+        if player then
+            startQuest(player)
+        end
+    end
+end)
+
+-- Periodically check for quest completion
+RunService.Heartbeat:Connect(function()
+    for _, player in pairs(game.Players:GetPlayers()) do
+        checkQuestCompletion(player)
+    end
+end)
+
+------------------------
+
+-- Local Script: Place this inside StarterPlayer -> StarterPlayerScripts
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local flying = false
+
+-- Teleportation location (Quest Giver)
+local teleportLocation = Vector3.new(200, 10, 200)
+
+-- Quest Event to receive updates from the server
+local questEvent = game.ReplicatedStorage:WaitForChild("QuestEvent")
+
+-- Function to toggle flying
+local function toggleFly()
+    flying = not flying
+    if flying then
+        -- Enable flight by adding BodyVelocity
+        local bodyVelocity = Instance.new("BodyVelocity")
+        bodyVelocity.MaxForce = Vector3.new(5000, 5000, 5000)
+        bodyVelocity.Velocity = Vector3.new(0, 50, 0)  -- Move upwards
+        bodyVelocity.Parent = character.HumanoidRootPart
+    else
+        -- Disable flight
+        character.HumanoidRootPart:FindFirstChild("BodyVelocity"):Destroy()
+    end
+end
+
+-- Function to teleport the player to the Quest Giver NPC
+local function teleportToQuestGiver()
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    humanoidRootPart.CFrame = CFrame.new(teleportLocation)  -- Teleport to Quest Giver location
+end
+
+-- Bind to Spacebar for flying toggle
+game:GetService("UserInputService").InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.Space then
+        toggleFly()
+    end
+end)
+
+-- Trigger teleportation to quest giver when quest is accepted or completed
+questEvent.OnClientEvent:Connect(function(message)
+    if message == "Quest Completed!" then
+        teleportToQuestGiver()
+    end
+end)
+
+------------------------
+
+-- NPC Combat System (for NPCs spawned to be defeated)
+local function setupNPCCombat(npc)
+    npc.Health = 100  -- Set health for the NPC
+
+    -- Function to handle damage and NPC death
+    local function onHit(damage)
+        npc.Health = npc.Health - damage
+        if npc.Health <= 0 then
+            npc:Destroy()
+            print(npc.Name .. " has been defeated!")
+        end
+    end
+
+    -- Example of being damaged (You can connect this to your player combat system)
+    npc.Touched:Connect(function(hit)
+        local character = hit.Parent
+        if character and character:FindFirstChild("Humanoid") then
+            -- Example damage value
+            onHit(25)
+        end
+    end)
+end
+
+-- Call the NPC combat setup for spawned NPCs
+local npc1 = game.Workspace:WaitForChild("TargetNPCs")
+setupNPCCombat(npc1)
