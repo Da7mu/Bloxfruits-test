@@ -1,63 +1,69 @@
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
-local circleRadius = 20 -- Adjust radius of the circle
-local detectionPart -- This will represent the detection circle
-local ball = workspace:FindFirstChild("Ball") -- Replace "Ball" with the actual name of the ball
+local character = player.Character or player.CharacterAdded:Wait()
+local userInputService = game:GetService("UserInputService")
+local runService = game:GetService("RunService")
+local bladeBall = workspace:FindFirstChild("BladeBall") -- Replace "BladeBall" with the actual name of the ball
+local circleRadius = 20 -- Radius of the detection circle
 
--- Function to create the detection circle
+-- Create a visual representation of the circle
 local function createCircle()
-    detectionPart = Instance.new("Part")
-    detectionPart.Size = Vector3.new(circleRadius * 2, 1, circleRadius * 2) -- Circle size
-    detectionPart.Shape = Enum.PartType.Cylinder
-    detectionPart.Anchored = true
-    detectionPart.CanCollide = false
-    detectionPart.Transparency = 0.5
-    detectionPart.Color = Color3.new(1, 0, 0) -- Red circle
-    detectionPart.Parent = workspace
+    local circlePart = Instance.new("Part")
+    circlePart.Name = "DetectionCircle"
+    circlePart.Size = Vector3.new(circleRadius * 2, 0.2, circleRadius * 2)
+    circlePart.Shape = Enum.PartType.Cylinder
+    circlePart.Material = Enum.Material.ForceField
+    circlePart.Transparency = 0.5
+    circlePart.CanCollide = false
+    circlePart.Anchored = true
+    circlePart.Color = Color3.new(0, 1, 0) -- Green circle
+    circlePart.Parent = workspace
+    return circlePart
 end
 
--- Function to update the circle's position to match the player
-local function updateCirclePosition()
-    local character = player.Character
+-- Updates the circle position to follow the player
+local function updateCircle(circle)
     if character and character:FindFirstChild("HumanoidRootPart") then
-        detectionPart.Position = character.HumanoidRootPart.Position + Vector3.new(0, -2, 0) -- Slightly below the player
+        circle.Position = character.HumanoidRootPart.Position + Vector3.new(0, -1, 0)
+        circle.Orientation = Vector3.new(0, 0, 0) -- Ensure it stays flat
     end
 end
 
--- Check if the ball is within the circle
-local function isBallInsideCircle()
-    if ball and detectionPart then
-        local distance = (ball.Position - detectionPart.Position).Magnitude
+-- Check if the ball is inside the detection circle
+local function isBallInsideCircle(circle)
+    if bladeBall and bladeBall:IsDescendantOf(workspace) then
+        local distance = (bladeBall.Position - circle.Position).Magnitude
         return distance <= circleRadius
     end
     return false
 end
 
--- Trigger action when clicked
-local function onClick()
-    if isBallInsideCircle() then
-        print("Ball is inside the circle! Action triggered.")
-        -- Perform your desired action here
+-- Perform the action (hit the ball)
+local function hitBladeBall()
+    if isBallInsideCircle(detectionCircle) then
+        print("Hit the Blade Ball!") -- Replace this with the actual action
+        -- Example: Apply a force to the ball
+        local ballVelocity = Instance.new("BodyVelocity")
+        ballVelocity.Velocity = Vector3.new(0, 30, 0) -- Adjust direction and speed
+        ballVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+        ballVelocity.Parent = bladeBall
+        game.Debris:AddItem(ballVelocity, 0.2) -- Remove force after 0.2 seconds
     else
-        print("Ball is not inside the circle.")
+        print("Blade Ball is not inside the circle.")
     end
 end
 
--- Initialize
-createCircle()
+-- Set up the detection circle
+local detectionCircle = createCircle()
 
--- Update the circle's position every frame
-game:GetService("RunService").RenderStepped:Connect(updateCirclePosition)
+-- Update the circle's position in real-time
+runService.RenderStepped:Connect(function()
+    updateCircle(detectionCircle)
+end)
 
--- Listen for player input
-if userInputService.TouchEnabled then
-    -- Mobile tap support
-    mouse.Button1Down:Connect(onClick)
-else
-    -- PC click support
-    game:GetService("UserInputService").InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            onClick()
-        end
-    end)
-end
+-- Handle input for both PC and mobile
+userInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end -- Ignore input if it's part of the game UI
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        hitBladeBall()
+    end
+end)
