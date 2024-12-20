@@ -1,0 +1,82 @@
+-- Blox Fruits Auto Farm Quest Script (Simplified)
+
+-- Setup references
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local questGiver = game.Workspace:WaitForChild("QuestGiver")  -- Quest giver location
+local questTargetName = "Bandit"  -- Example enemy for the quest
+local questRequiredKills = 10  -- How many enemies need to be defeated for quest completion
+local questProgress = 0  -- Track progress
+
+-- Function to accept quest (simple example)
+local function acceptQuest()
+    -- Find quest giver
+    local questPart = questGiver:FindFirstChild("QuestPart")  -- Quest interaction part
+    if questPart then
+        -- Simulate interacting with the quest giver
+        fireclickdetector(questPart:FindFirstChildOfClass("ClickDetector"))
+        print("Quest accepted: Defeat " .. questTargetName .. "!")
+    else
+        warn("Quest giver not found!")
+    end
+end
+
+-- Function to find and attack enemies
+local function findAndAttackEnemies()
+    while questProgress < questRequiredKills do
+        local target = nil
+        local closestEnemyDist = math.huge
+        
+        -- Search for the target enemies in the game
+        for _, enemy in pairs(game.Workspace.Enemies:GetChildren()) do
+            if enemy.Name == questTargetName and enemy:FindFirstChild("HumanoidRootPart") then
+                -- Find the closest enemy
+                local dist = (humanoidRootPart.Position - enemy.HumanoidRootPart.Position).Magnitude
+                if dist < closestEnemyDist then
+                    closestEnemyDist = dist
+                    target = enemy
+                end
+            end
+        end
+        
+        -- If a target enemy is found, move and attack it
+        if target then
+            humanoidRootPart.CFrame = CFrame.new(target.HumanoidRootPart.Position)
+            -- Simulate attack (e.g., a basic melee attack)
+            -- Replace this with actual combat code, like pressing a button or activating an ability
+            print("Attacking " .. target.Name)
+            wait(1)  -- Attack interval (you can make this faster/slower depending on game)
+            
+            -- Assuming the enemy has been defeated
+            -- Increment quest progress
+            questProgress = questProgress + 1
+            print("Quest Progress: " .. questProgress .. "/" .. questRequiredKills)
+        else
+            print("No enemies found, waiting...")
+        end
+        
+        wait(2)  -- Wait before searching for new enemies
+    end
+end
+
+-- Function to turn in the quest (after killing enough enemies)
+local function turnInQuest()
+    -- Find the quest giver again (or you can add logic for different locations)
+    local questPart = questGiver:FindFirstChild("QuestPart")
+    if questPart then
+        -- Simulate turning in the quest
+        fireclickdetector(questPart:FindFirstChildOfClass("ClickDetector"))
+        print("Quest Completed! Returning to Quest Giver.")
+    else
+        warn("Quest giver not found for turn-in!")
+    end
+end
+
+-- Main Loop
+while true do
+    acceptQuest()  -- Accept the quest from the giver
+    findAndAttackEnemies()  -- Start farming enemies for the quest
+    turnInQuest()  -- After quest is complete, turn it in
+    wait(5)  -- Delay before accepting a new quest
+end
