@@ -1,0 +1,63 @@
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+local circleRadius = 20 -- Adjust radius of the circle
+local detectionPart -- This will represent the detection circle
+local ball = workspace:FindFirstChild("Ball") -- Replace "Ball" with the actual name of the ball
+
+-- Function to create the detection circle
+local function createCircle()
+    detectionPart = Instance.new("Part")
+    detectionPart.Size = Vector3.new(circleRadius * 2, 1, circleRadius * 2) -- Circle size
+    detectionPart.Shape = Enum.PartType.Cylinder
+    detectionPart.Anchored = true
+    detectionPart.CanCollide = false
+    detectionPart.Transparency = 0.5
+    detectionPart.Color = Color3.new(1, 0, 0) -- Red circle
+    detectionPart.Parent = workspace
+end
+
+-- Function to update the circle's position to match the player
+local function updateCirclePosition()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        detectionPart.Position = character.HumanoidRootPart.Position + Vector3.new(0, -2, 0) -- Slightly below the player
+    end
+end
+
+-- Check if the ball is within the circle
+local function isBallInsideCircle()
+    if ball and detectionPart then
+        local distance = (ball.Position - detectionPart.Position).Magnitude
+        return distance <= circleRadius
+    end
+    return false
+end
+
+-- Trigger action when clicked
+local function onClick()
+    if isBallInsideCircle() then
+        print("Ball is inside the circle! Action triggered.")
+        -- Perform your desired action here
+    else
+        print("Ball is not inside the circle.")
+    end
+end
+
+-- Initialize
+createCircle()
+
+-- Update the circle's position every frame
+game:GetService("RunService").RenderStepped:Connect(updateCirclePosition)
+
+-- Listen for player input
+if userInputService.TouchEnabled then
+    -- Mobile tap support
+    mouse.Button1Down:Connect(onClick)
+else
+    -- PC click support
+    game:GetService("UserInputService").InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            onClick()
+        end
+    end)
+end
